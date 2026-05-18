@@ -3,33 +3,165 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>PSHRSH</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Raleway:wght@200;300;400&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
+
+    <canvas id="particle-canvas"></canvas>
+
     <div id="wrapper">
         <div id="mainblock">
-            <h1 id="mainheader">PSHRSH</h1>
+
+            <h1 id="mainheader">
+                <span class="letter">P</span><span class="letter">S</span><span class="letter">H</span><span class="letter">R</span><span class="letter">S</span><span class="letter">H</span>
+            </h1>
+
+            <div class="divider"></div>
+
             <div class="content-row">
-                <img src="pshrsh1.jpg" alt="pshrsh">
-                <p class="text">I do everything and I love you</p>
+                <div class="img-wrap">
+                    <img src="pshrsh1.jpg" alt="pshrsh">
+                    <div class="img-overlay"></div>
+                </div>
+                <div class="right-col">
+                    <p class="text">I do everything<br><em>uuur my baby <img src="egg-moji.png" alt="🥚" style="width:1.1em;height:1.1em;vertical-align:middle;display:inline;margin-left:2px;"><br>& ℑ 𝔏𝔬𝔳𝔢 𝔜𝔬𝔲</em></p>
+                    <div class="logo-container">
+                        <a href="https://example.com" target="_blank" title="Instagram">
+                            <img src="instagram_icon.png" alt="Instagram" class="logo">
+                        </a>
+                        <a href="https://example.com" target="_blank" title="Spotify">
+                            <img src="spotify_icon.png" alt="Spotify" class="logo">
+                        </a>
+                        <a href="https://example.com" target="_blank" title="Soundcloud">
+                            <img src="soundcloud_icon.png" alt="Soundcloud" class="logo">
+                        </a>
+                        <a href="https://example.com" target="_blank" title="GitHub">
+                            <img src="github_icon.png" alt="Github" class="logo">
+                        </a>
+                    </div>
+                </div>
             </div>
-            <div class="logo-container">
-                <a href="https://example.com" target="_blank">
-                    <img src="Instagram_icon.png" alt="Instagram Logo" class="logo">
-                </a>
-                <a href="https://example.com" target="_blank">
-                    <img src="spotify_icon.png" alt="Spotify Logo" class="logo">
-                </a>
-                <a href="https://example.com" target="_blank">
-                    <img src="soundcloud_icon.png" alt="Soundcloud Logo" class="logo">
-                </a>
-                <a>
-                    <img src="github_icon.png" alt="Github Logo" class="logo">
-                </a>
-            </div>
+
         </div>
         <img src="cat.png" id="peeking-cat" alt="Peeking Cat">
     </div>
+
+    <script>
+
+        /* ── Particle System ── */
+        const canvas = document.getElementById('particle-canvas');
+        const ctx    = canvas.getContext('2d');
+
+        function resize() {
+            canvas.width  = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        resize();
+        window.addEventListener('resize', resize);
+
+        const SHAPES = ['cross', 'diamond', 'dash', 'dot'];
+
+        // icy lavender / steel blue / pale mint / white — drain gang palette
+        const COLORS = [
+            'rgba(200,180,230,',
+            'rgba(160,200,220,',
+            'rgba(170,210,185,',
+            'rgba(230,220,245,',
+            'rgba(140,160,205,',
+        ];
+
+        function makeParticle(randomY = false) {
+            const color = COLORS[Math.floor(Math.random() * COLORS.length)];
+            return {
+                x:           Math.random() * (canvas.width || window.innerWidth),
+                y:           randomY
+                                 ? Math.random() * (canvas.height || window.innerHeight)
+                                 : -(Math.random() * 40 + 5),
+                size:        Math.random() * 3.2 + 0.8,
+                speedY:      Math.random() * 0.55 + 0.2,
+                speedX:      (Math.random() - 0.5) * 0.25,
+                drift:       (Math.random() - 0.5) * 0.003,
+                alpha:       Math.random() * 0.4 + 0.08,
+                shape:       SHAPES[Math.floor(Math.random() * SHAPES.length)],
+                color,
+                rotation:    Math.random() * Math.PI * 2,
+                rotSpeed:    (Math.random() - 0.5) * 0.018,
+                flickerRate: Math.random() < 0.12
+                                 ? Math.random() * 0.05 + 0.015
+                                 : 0,
+                flickerPhase: Math.random() * Math.PI * 2,
+            };
+        }
+
+        const COUNT = 150;
+        const particles = Array.from({ length: COUNT }, () => makeParticle(true));
+
+        /* drawing helpers */
+        function drawCross(s) {
+            const t = s * 0.3;
+            ctx.fillRect(-t, -s, t * 2, s * 2);
+            ctx.fillRect(-s, -t, s * 2, t * 2);
+        }
+        function drawDiamond(s) {
+            ctx.beginPath();
+            ctx.moveTo(0, -s);
+            ctx.lineTo(s * 0.55, 0);
+            ctx.lineTo(0, s);
+            ctx.lineTo(-s * 0.55, 0);
+            ctx.closePath();
+            ctx.fill();
+        }
+        function drawDash(s) {
+            ctx.fillRect(-s, -s * 0.18, s * 2, s * 0.36);
+        }
+
+        let t = 0;
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            t += 0.016;
+
+            for (const p of particles) {
+                p.speedX += p.drift;
+                p.speedX  = Math.max(-0.55, Math.min(0.55, p.speedX));
+                p.x      += p.speedX;
+                p.y      += p.speedY;
+                p.rotation += p.rotSpeed;
+
+                if (p.y > canvas.height + 12) {
+                    const fresh = makeParticle(false);
+                    Object.assign(p, fresh);
+                }
+
+                let alpha = p.alpha;
+                if (p.flickerRate > 0) {
+                    alpha *= 0.5 + 0.5 * Math.abs(
+                        Math.sin((t + p.flickerPhase) / p.flickerRate)
+                    );
+                }
+
+                ctx.save();
+                ctx.translate(p.x, p.y);
+                ctx.rotate(p.rotation);
+                ctx.fillStyle = p.color + alpha + ')';
+
+                if      (p.shape === 'cross')   drawCross(p.size);
+                else if (p.shape === 'diamond') drawDiamond(p.size);
+                else if (p.shape === 'dash')    drawDash(p.size);
+                else {
+                    ctx.beginPath();
+                    ctx.arc(0, 0, p.size * 0.65, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+                ctx.restore();
+            }
+
+            requestAnimationFrame(animate);
+        }
+        animate();
+    </script>
 </body>
 </html>
